@@ -41,14 +41,25 @@ public class LevelSelectScreen extends JPanel {
         JButton eqBtn = Theme.successButton("🧮 Equation Mode");
         eqBtn.addActionListener(e -> window.startEquationGame());
 
-        JButton homeBtn = Theme.ghostButton("🔓 Logout");
-        homeBtn.addActionListener(e -> window.goToLogin());
+        JButton accountBtn = Theme.ghostButton("👤 My Account");
+        accountBtn.addActionListener(e -> window.goToMyAccount());
 
         JButton lbBtn = Theme.ghostButton("🏆 Leaderboard");
         lbBtn.addActionListener(e -> window.goToLeaderboard());
 
+        JButton homeBtn = Theme.ghostButton("🔓 Logout");
+        homeBtn.addActionListener(e -> window.goToLogin());
+
         headerRight.add(eqBtn);
+        headerRight.add(accountBtn);
         headerRight.add(lbBtn);
+        // Only show admin button to admins
+        if (Session.isAdmin()) {
+            JButton adminBtn = Theme.ghostButton("🛡 Admin");
+            adminBtn.setForeground(Theme.APPLE_RED);
+            adminBtn.addActionListener(e -> window.goToAdminPanel());
+            headerRight.add(adminBtn);
+        }
         headerRight.add(homeBtn);
 
         header.add(title, BorderLayout.WEST);

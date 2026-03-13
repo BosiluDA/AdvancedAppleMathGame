@@ -1,151 +1,210 @@
--- ============================================================
---  Apple Math Puzzle Game — XAMPP MySQL Setup
---  Run this in phpMyAdmin or MySQL CLI:
---    mysql -u root -p < apple_math_game.sql
--- ============================================================
+-- ===========================================================
+-- Apple Math Puzzle Game - Full AAA Database Setup
+-- Compatible with: MySQL 5.7+ / MariaDB 10.3+ (XAMPP)
+--
+-- HOW TO RUN:
+--   phpMyAdmin -> Import tab -> Choose File -> Go
+--   OR: mysql -u root < apple_math_game.sql
+-- ===========================================================
 
--- 1. Create & select the database
 CREATE DATABASE IF NOT EXISTS apple_math_game
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
 USE apple_math_game;
 
--- ============================================================
---  USERS  (Authentication)
--- ============================================================
+
+-- ===========================================================
+-- TABLE: users
+-- Authentication + Authorization
+-- ===========================================================
+
 CREATE TABLE IF NOT EXISTS users (
-    id            INT AUTO_INCREMENT PRIMARY KEY,
-    username      VARCHAR(50)  UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    salt          VARCHAR(64)  NOT NULL,
-    role          ENUM('player','admin') DEFAULT 'player',
-    is_active     TINYINT(1)   DEFAULT 1,
-    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    last_login    TIMESTAMP    NULL
+    id              INT           NOT NULL AUTO_INCREMENT,
+    username        VARCHAR(50)   NOT NULL,
+    email           VARCHAR(100)  NOT NULL DEFAULT '',
+    password_hash   VARCHAR(255)  NOT NULL,
+    salt            VARCHAR(64)   NOT NULL,
+    role            VARCHAR(10)   NOT NULL DEFAULT 'player',
+    is_active       TINYINT(1)    NOT NULL DEFAULT 1,
+    is_locked       TINYINT(1)    NOT NULL DEFAULT 0,
+    email_verified  TINYINT(1)    NOT NULL DEFAULT 0,
+    verify_token    VARCHAR(64)   NULL DEFAULT NULL,
+    failed_attempts INT           NOT NULL DEFAULT 0,
+    lockout_until   TIMESTAMP     NULL DEFAULT NULL,
+    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_login      TIMESTAMP     NULL DEFAULT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_username (username),
+    UNIQUE KEY uq_email    (email)
 );
 
--- ============================================================
---  SESSIONS  (Authorization tokens)
--- ============================================================
+
+-- ===========================================================
+-- TABLE: sessions
+-- Authorization tokens (8-hour expiry)
+-- ===========================================================
+
 CREATE TABLE IF NOT EXISTS sessions (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
+    id           INT          NOT NULL AUTO_INCREMENT,
     user_id      INT          NOT NULL,
-    token        VARCHAR(128) UNIQUE NOT NULL,
-    created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    expires_at   TIMESTAMP    NOT NULL,
-    ip_address   VARCHAR(45),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    token        VARCHAR(128) NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ip_address   VARCHAR(45)  NULL DEFAULT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_token (token),
+    CONSTRAINT fk_sessions_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ============================================================
---  SCORES  (Accounting — game results)
--- ============================================================
+
+-- ===========================================================
+-- TABLE: scores
+-- Accounting - every game result
+-- ===========================================================
+
 CREATE TABLE IF NOT EXISTS scores (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
+    id          INT          NOT NULL AUTO_INCREMENT,
     user_id     INT          NOT NULL,
     username    VARCHAR(50)  NOT NULL,
     score       INT          NOT NULL DEFAULT 0,
     mode        VARCHAR(30)  NOT NULL,
-    level       INT          DEFAULT 0,
-    time_taken  INT          DEFAULT 0,
-    streak      INT          DEFAULT 0,
-    played_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    level       INT          NOT NULL DEFAULT 0,
+    time_taken  INT          NOT NULL DEFAULT 0,
+    streak      INT          NOT NULL DEFAULT 0,
+    played_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_scores_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ============================================================
---  LEVEL_PROGRESS  (Per-user level unlock tracking)
--- ============================================================
+
+-- ===========================================================
+-- TABLE: level_progress
+-- Accounting - per-user level tracking with attempt count
+-- ===========================================================
+
 CREATE TABLE IF NOT EXISTS level_progress (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    user_id      INT NOT NULL,
-    level        INT NOT NULL,
-    best_score   INT DEFAULT 0,
-    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id            INT       NOT NULL AUTO_INCREMENT,
+    user_id       INT       NOT NULL,
+    level         INT       NOT NULL,
+    best_score    INT       NOT NULL DEFAULT 0,
+    attempt_count INT       NOT NULL DEFAULT 0,
+    completed_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
     UNIQUE KEY uq_user_level (user_id, level),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_progress_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ============================================================
---  AUDIT_LOG  (Accounting — full activity trail)
--- ============================================================
+
+-- ===========================================================
+-- TABLE: audit_log
+-- Accounting - full activity trail
+-- Tracks: logins, failures, lockouts, score saves, admin actions
+-- ===========================================================
+
 CREATE TABLE IF NOT EXISTS audit_log (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
+    id         INT          NOT NULL AUTO_INCREMENT,
     user_id    INT          NULL,
-    username   VARCHAR(50),
+    username   VARCHAR(50)  NULL,
     action     VARCHAR(100) NOT NULL,
-    detail     TEXT,
-    ip_address VARCHAR(45),
-    logged_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+    detail     TEXT         NULL,
+    ip_address VARCHAR(45)  NULL DEFAULT NULL,
+    logged_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
 );
 
--- ============================================================
---  INDEXES  (Performance)
--- ============================================================
-CREATE INDEX IF NOT EXISTS idx_scores_user    ON scores(user_id);
-CREATE INDEX IF NOT EXISTS idx_scores_score   ON scores(score DESC);
-CREATE INDEX IF NOT EXISTS idx_scores_time    ON scores(time_taken ASC);
-CREATE INDEX IF NOT EXISTS idx_audit_user     ON audit_log(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_action   ON audit_log(action);
-CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-CREATE INDEX IF NOT EXISTS idx_sessions_exp   ON sessions(expires_at);
 
--- ============================================================
---  SEED DATA  (Default admin account)
---  Username : admin
---  Password : admin123
---  NOTE: Change this password immediately after first login!
---  Hash below = SHA-256 x10000 of "SEED_SALT_HEREadmin123SEED_SALT_HERE"
--- ============================================================
-INSERT IGNORE INTO users (username, password_hash, salt, role) VALUES (
-    'admin',
-    -- Re-generate via the app's registration flow for real deployments
-    'CHANGE_ME_register_via_app',
-    'SEED_SALT_HERE',
-    'admin'
-);
+-- ===========================================================
+-- INDEXES
+-- ===========================================================
 
--- ============================================================
---  USEFUL VIEWS  (optional, for phpMyAdmin browsing)
--- ============================================================
+ALTER TABLE scores
+    ADD INDEX idx_scores_user  (user_id),
+    ADD INDEX idx_scores_score (score),
+    ADD INDEX idx_scores_time  (time_taken);
 
-CREATE OR REPLACE VIEW v_leaderboard_scores AS
-    SELECT u.username, s.score, s.mode, s.level, s.played_at
+ALTER TABLE audit_log
+    ADD INDEX idx_audit_user   (user_id),
+    ADD INDEX idx_audit_action (action),
+    ADD INDEX idx_audit_time   (logged_at);
+
+ALTER TABLE sessions
+    ADD INDEX idx_sessions_exp (expires_at);
+
+ALTER TABLE users
+    ADD INDEX idx_users_lockout (lockout_until);
+
+
+-- ===========================================================
+-- VIEWS
+-- ===========================================================
+
+CREATE OR REPLACE VIEW v_top_scores AS
+    SELECT u.username, s.score, s.mode, s.level, s.streak, s.played_at
     FROM scores s
-    JOIN users u ON s.user_id = u.id
+    INNER JOIN users u ON s.user_id = u.id
     ORDER BY s.score DESC
     LIMIT 100;
 
-CREATE OR REPLACE VIEW v_leaderboard_times AS
+CREATE OR REPLACE VIEW v_fastest_times AS
     SELECT u.username, s.time_taken, s.level, s.score, s.played_at
     FROM scores s
-    JOIN users u ON s.user_id = u.id
+    INNER JOIN users u ON s.user_id = u.id
     WHERE s.mode LIKE 'Memory%'
     ORDER BY s.time_taken ASC
     LIMIT 100;
 
 CREATE OR REPLACE VIEW v_user_progress AS
-    SELECT u.username, lp.level, lp.best_score, lp.completed_at
+    SELECT u.username, lp.level, lp.best_score, lp.attempt_count, lp.completed_at
     FROM level_progress lp
-    JOIN users u ON lp.user_id = u.id
-    ORDER BY u.username, lp.level;
+    INNER JOIN users u ON lp.user_id = u.id
+    ORDER BY u.username ASC, lp.level ASC;
 
 CREATE OR REPLACE VIEW v_audit_recent AS
-    SELECT id, username, action, detail, logged_at
-    FROM audit_log
-    ORDER BY logged_at DESC
+    SELECT a.id, a.username, a.action, a.detail, a.logged_at
+    FROM audit_log a
+    ORDER BY a.logged_at DESC
     LIMIT 500;
 
--- ============================================================
---  CLEANUP JOB  (Remove expired sessions — run periodically)
---  You can set this up as a MySQL Event Scheduler job:
--- ============================================================
--- CREATE EVENT IF NOT EXISTS cleanup_expired_sessions
---     ON SCHEDULE EVERY 1 HOUR
---     DO DELETE FROM sessions WHERE expires_at < NOW();
+CREATE OR REPLACE VIEW v_failed_logins AS
+    SELECT username, COUNT(*) AS attempts, MAX(logged_at) AS last_attempt
+    FROM audit_log
+    WHERE action = 'LOGIN_FAILED'
+    GROUP BY username
+    ORDER BY attempts DESC;
 
--- ============================================================
---  DONE
--- ============================================================
-SELECT 'apple_math_game database ready ✅' AS status;
+CREATE OR REPLACE VIEW v_player_summary AS
+    SELECT
+        u.id,
+        u.username,
+        u.role,
+        u.is_active,
+        u.email_verified,
+        u.failed_attempts,
+        u.created_at,
+        u.last_login,
+        COUNT(DISTINCT s.id)     AS total_games,
+        MAX(s.score)             AS best_score,
+        COUNT(DISTINCT lp.level) AS levels_completed
+    FROM users u
+    LEFT JOIN scores s          ON s.user_id  = u.id
+    LEFT JOIN level_progress lp ON lp.user_id = u.id
+    GROUP BY u.id, u.username, u.role, u.is_active,
+             u.email_verified, u.failed_attempts,
+             u.created_at, u.last_login;
+
+
+-- ===========================================================
+-- VERIFY
+-- ===========================================================
+
+SELECT
+    table_name  AS 'Table',
+    table_rows  AS 'Rows (approx)',
+    create_time AS 'Created'
+FROM information_schema.tables
+WHERE table_schema = 'apple_math_game'
+ORDER BY table_name;

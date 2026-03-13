@@ -88,8 +88,8 @@ public class EquationGameScreen extends JPanel {
         apiLabel.setFont(Theme.fontMono(11));
         apiLabel.setForeground(Theme.TEXT_DIM);
 
-        JButton quit = Theme.ghostButton("✕ Quit");
-        quit.addActionListener(e -> { cleanup(); window.goToLogin(); });
+        JButton quit = Theme.ghostButton("⌂ Levels");
+        quit.addActionListener(e -> { cleanup(); window.goToLevels(); });
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         right.setOpaque(false);
@@ -394,8 +394,8 @@ public class EquationGameScreen extends JPanel {
             fetchNextQuestion();
         });
 
-        JButton quitBtn = Theme.ghostButton("Quit Game");
-        quitBtn.addActionListener(e -> { cleanup(); window.goToLogin(); });
+        JButton quitBtn = Theme.ghostButton("⌂ Back to Levels");
+        quitBtn.addActionListener(e -> { cleanup(); window.goToLevels(); });
 
         btns.add(retryBtn);
         btns.add(quitBtn);
@@ -564,9 +564,9 @@ public class EquationGameScreen extends JPanel {
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
         btnRow.setOpaque(false);
         JButton again = Theme.primaryButton("Play Again");
-        JButton home  = Theme.ghostButton("Home");
+        JButton home  = Theme.ghostButton("⌂ Level Select");
         again.addActionListener(e -> { dlg.dispose(); window.startEquationGame(); });
-        home.addActionListener(e  -> { dlg.dispose(); window.goToLogin(); });
+        home.addActionListener(e  -> { dlg.dispose(); window.goToLevels(); });
         btnRow.add(again);
         btnRow.add(home);
 

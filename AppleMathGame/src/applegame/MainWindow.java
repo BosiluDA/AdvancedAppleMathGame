@@ -5,16 +5,18 @@ import java.awt.*;
 
 public class MainWindow extends JFrame {
 
-    private final GameState      state;
+    private final GameState       state;
     private final DataBaseManager db;
-    private final CardLayout     cardLayout;
-    private final JPanel         root;
+    private final CardLayout      cardLayout;
+    private final JPanel          root;
 
-    public static final String SCREEN_LOGIN      = "LOGIN";
-    public static final String SCREEN_LEVELS     = "LEVELS";
-    public static final String SCREEN_MEMORY     = "MEMORY";
-    public static final String SCREEN_EQUATION   = "EQUATION";
-    public static final String SCREEN_LEADERBOARD= "LEADERBOARD";
+    public static final String SCREEN_LOGIN       = "LOGIN";
+    public static final String SCREEN_LEVELS      = "LEVELS";
+    public static final String SCREEN_MEMORY      = "MEMORY";
+    public static final String SCREEN_EQUATION    = "EQUATION";
+    public static final String SCREEN_LEADERBOARD = "LEADERBOARD";
+    public static final String SCREEN_ACCOUNT     = "ACCOUNT";
+    public static final String SCREEN_ADMIN       = "ADMIN";
 
     public MainWindow(GameState state, DataBaseManager db) {
         this.state      = state;
@@ -26,10 +28,9 @@ public class MainWindow extends JFrame {
         setTitle("🍎 Apple Math Puzzle");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(900, 680));
-        setPreferredSize(new Dimension(1000, 720));
+        setPreferredSize(new Dimension(1050, 740));
         setLocationRelativeTo(null);
 
-        // Shutdown hook — close DB connection cleanly
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (Session.isLoggedIn()) Session.logout();
             db.close();
@@ -40,8 +41,6 @@ public class MainWindow extends JFrame {
         pack();
         showScreen(SCREEN_LOGIN);
     }
-
-    // ── Navigation ────────────────────────────────────────────────────────────
 
     public void showScreen(String name) { cardLayout.show(root, name); }
 
@@ -72,13 +71,23 @@ public class MainWindow extends JFrame {
         showScreen(SCREEN_LEADERBOARD);
     }
 
+    public void goToMyAccount() {
+        replace(SCREEN_ACCOUNT, new MyAccountScreen(db, this));
+        showScreen(SCREEN_ACCOUNT);
+    }
+
+    public void goToAdminPanel() {
+        if (!Session.isAdmin()) return; // authorization guard
+        replace(SCREEN_ADMIN, new AdminPanel(db, this));
+        showScreen(SCREEN_ADMIN);
+    }
+
     public void goToLogin() {
         Session.logout();
         replace(SCREEN_LOGIN, new LoginScreen(db, this));
         showScreen(SCREEN_LOGIN);
     }
 
-    // ── Accessors ─────────────────────────────────────────────────────────────
     public GameState       getGameState() { return state; }
     public DataBaseManager getDb()        { return db; }
 }
