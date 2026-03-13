@@ -47,27 +47,6 @@ Find the missing number in math equations.
 - Java JDK 11 or higher
 - No external libraries needed
 
----
-
-## How to Run
-
-### Windows
-```
-run.bat
-```
-
-### macOS / Linux
-```bash
-chmod +x run.sh
-./run.sh
-```
-
-### Manual
-```bash
-mkdir out
-javac -sourcepath src -d out src/applegame/*.java
-java -cp out applegame.Main
-```
 
 ---
 
