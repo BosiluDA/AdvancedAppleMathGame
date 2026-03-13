@@ -39,7 +39,24 @@ public class LevelSelectScreen extends JPanel {
         headerRight.setOpaque(false);
 
         JButton eqBtn = Theme.successButton("🧮 Equation Mode");
-        eqBtn.addActionListener(e -> window.startEquationGame());
+        if (Session.canPlayEquation()) {
+            eqBtn.addActionListener(e -> window.startEquationGame());
+        } else {
+            // Guest — show lock and explain on click
+            eqBtn.setText("🔒 Equation Mode");
+            eqBtn.setForeground(Theme.TEXT_DIM);
+            eqBtn.addActionListener(e -> {
+                JOptionPane pane = new JOptionPane(
+                    "<html><div style='text-align:center;width:280px'>" +
+                    "<b>Sign in required</b><br><br>" +
+                    "Equation Challenge Mode is only available to registered players.<br><br>" +
+                    "Create a free account to unlock it!" +
+                    "</div></html>",
+                    JOptionPane.INFORMATION_MESSAGE);
+                JDialog dlg = pane.createDialog(window, "🔒 Members Only");
+                dlg.setVisible(true);
+            });
+        }
 
         JButton accountBtn = Theme.ghostButton("👤 My Account");
         accountBtn.addActionListener(e -> window.goToMyAccount());
@@ -47,13 +64,12 @@ public class LevelSelectScreen extends JPanel {
         JButton lbBtn = Theme.ghostButton("🏆 Leaderboard");
         lbBtn.addActionListener(e -> window.goToLeaderboard());
 
-        JButton homeBtn = Theme.ghostButton("🔓 Logout");
+        JButton homeBtn = Theme.ghostButton(Session.isGuest() ? "✕ Exit Guest" : "🔓 Logout");
         homeBtn.addActionListener(e -> window.goToLogin());
 
         headerRight.add(eqBtn);
-        headerRight.add(accountBtn);
+        if (!Session.isGuest()) headerRight.add(accountBtn);
         headerRight.add(lbBtn);
-        // Only show admin button to admins
         if (Session.isAdmin()) {
             JButton adminBtn = Theme.ghostButton("🛡 Admin");
             adminBtn.setForeground(Theme.APPLE_RED);
@@ -77,13 +93,10 @@ public class LevelSelectScreen extends JPanel {
         infoStrip.setOpaque(false);
         infoStrip.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 24));
 
-        JLabel playerLbl = new JLabel("Player: " + state.getPlayerName());
+        JLabel playerLbl = new JLabel(
+            Session.isGuest() ? "👤 Guest  (scores not saved)" : "Player: " + state.getPlayerName());
         playerLbl.setFont(Theme.fontBodyBold(13));
-        playerLbl.setForeground(Theme.APPLE_LIME);
-
-        JLabel scoreLbl = new JLabel("Total Score: " + state.getTotalScore());
-        scoreLbl.setFont(Theme.fontMono(13));
-        scoreLbl.setForeground(Theme.APPLE_GOLD);
+        playerLbl.setForeground(Session.isGuest() ? Theme.TEXT_MUTED : Theme.APPLE_LIME);
 
         int done = state.getCompletedLevels().size();
         JLabel progressLbl = new JLabel("Progress: " + done + " / " + GameState.LEVEL_CONFIG.length + " levels");
@@ -91,11 +104,16 @@ public class LevelSelectScreen extends JPanel {
         progressLbl.setForeground(Theme.TEXT_MUTED);
 
         infoStrip.add(playerLbl);
-        infoStrip.add(new JSeparator(SwingConstants.VERTICAL) {{
-            setPreferredSize(new Dimension(1, 20));
-            setForeground(Theme.BORDER_SOFT);
-        }});
-        infoStrip.add(scoreLbl);
+        if (!Session.isGuest()) {
+            JLabel scoreLbl = new JLabel("Total Score: " + state.getTotalScore());
+            scoreLbl.setFont(Theme.fontMono(13));
+            scoreLbl.setForeground(Theme.APPLE_GOLD);
+            infoStrip.add(new JSeparator(SwingConstants.VERTICAL) {{
+                setPreferredSize(new Dimension(1, 20));
+                setForeground(Theme.BORDER_SOFT);
+            }});
+            infoStrip.add(scoreLbl);
+        }
         infoStrip.add(new JSeparator(SwingConstants.VERTICAL) {{
             setPreferredSize(new Dimension(1, 20));
             setForeground(Theme.BORDER_SOFT);

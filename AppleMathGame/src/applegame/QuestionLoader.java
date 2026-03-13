@@ -112,7 +112,7 @@ public class QuestionLoader {
     }
 
     private static QuestionResult fetchFromEndpoint(String urlStr) throws Exception {
-        URL url = new URL(urlStr);
+        URL url = URI.create(urlStr).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
         conn.setReadTimeout(READ_TIMEOUT_MS);
