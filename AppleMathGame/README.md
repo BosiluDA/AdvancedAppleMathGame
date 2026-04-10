@@ -50,25 +50,6 @@ Find the missing number in math equations.
 ---
 
 ## How to Run
-
-### Windows
-```
-run.bat
-```
-
-### macOS / Linux
-```bash
-chmod +x run.sh
-./run.sh
-```
-
-### Manual
-```bash
-mkdir out
-javac -sourcepath src -d out src/applegame/*.java
-java -cp out applegame.Main
-```
-
 ---
 
 ## Math Fun Facts Included
@@ -83,22 +64,3 @@ java -cp out applegame.Main
 
 ---
 
-## Project Structure
-```
-AppleMathGame/
-├── src/applegame/
-│   ├── Main.java               — Entry point
-│   ├── GameState.java          — Session data, scores, facts
-│   ├── Theme.java              — Colors, fonts, paint helpers
-│   ├── MainWindow.java         — Root JFrame, screen navigation
-│   ├── HomeScreen.java         — Animated splash with name entry
-│   ├── LevelSelectScreen.java  — 5-level grid with lock/unlock
-│   ├── MemoryCard.java         — Card data model
-│   ├── CardPanel.java          — Card with 3D flip animation
-│   ├── MemoryGameScreen.java   — Full memory matching game
-│   ├── EquationGameScreen.java — Equation challenge (API + fallback)
-│   └── LeaderboardScreen.java  — Top 10 scores display
-├── run.bat   — Windows build & run
-├── run.sh    — macOS/Linux build & run
-└── README.md
-```
