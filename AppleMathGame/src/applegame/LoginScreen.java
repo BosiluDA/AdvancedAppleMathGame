@@ -530,6 +530,7 @@ public class LoginScreen extends JPanel {
     // =========================================================================
 
     private void doLogin() {
+        // Block if UI countdown is still running
         if (lockoutSecsLeft > 0) return;
         String username = loginUserField.getText().trim();
         String password = new String(loginPassField.getPassword());
@@ -546,14 +547,23 @@ public class LoginScreen extends JPanel {
                 try {
                     DataBaseManager.LoginResult r = get();
                     if (r.isSuccess()) {
+                        // Stop any running timer on success
+                        if (lockoutTimer != null) lockoutTimer.stop();
+                        lockoutSecsLeft = 0;
                         Session.login(r.user, db);
                         window.getGameState().setPlayerName(r.user.username);
                         window.getGameState().setUserId(r.user.id);
                         window.getGameState().loadCompletedLevels(db.getCompletedLevels(r.user.id));
                         window.goToLevels();
                     } else if (r.status == DataBaseManager.LoginResult.Status.LOCKED) {
-                        setLoginFeedback(r.message, false);
-                        startLockoutCountdown();
+                        // Only start a fresh countdown if one isn't already running
+                        if (lockoutSecsLeft <= 0) {
+                            startLockoutCountdown();
+                        } else {
+                            // Timer already running — just update the message
+                            setLoginFeedback(r.message, false);
+                            loginBtn.setEnabled(true);
+                        }
                     } else {
                         setLoginFeedback(r.message, false);
                         loginBtn.setEnabled(true);
@@ -570,16 +580,20 @@ public class LoginScreen extends JPanel {
     private void startLockoutCountdown() {
         lockoutSecsLeft = 60;
         if (lockoutTimer != null) lockoutTimer.stop();
+        loginBtn.setEnabled(false);
         lockoutTimer = new Timer(1000, e -> {
             lockoutSecsLeft--;
             if (lockoutSecsLeft <= 0) {
-                lockoutTimer.stop(); loginBtn.setEnabled(true);
-                setLoginFeedback("You can try again now.", true);
+                lockoutSecsLeft = 0;
+                lockoutTimer.stop();
+                loginBtn.setEnabled(true);
+                setLoginFeedback("Lockout expired. Please try again.", true);
             } else {
                 setLoginFeedback("Too many attempts. Wait " + lockoutSecsLeft + "s…", false);
             }
         });
         lockoutTimer.start();
+        setLoginFeedback("Too many attempts. Wait 60s…", false);
     }
 
     private void doRegister() {
