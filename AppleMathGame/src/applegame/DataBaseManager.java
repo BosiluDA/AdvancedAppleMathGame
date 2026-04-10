@@ -179,11 +179,29 @@ public class DataBaseManager {
                 return LoginResult.error("Your account has been disabled. Contact an admin.");
             }
 
-            // Check lockout cooldown
-            if (lockoutUntil != null && lockoutUntil.after(new java.util.Date())) {
-                long secsLeft = (lockoutUntil.getTime() - System.currentTimeMillis()) / 1000;
-                audit(uid, username, "LOGIN_DENIED", "Account locked, " + secsLeft + "s remaining");
-                return LoginResult.locked("Too many failed attempts. Try again in " + secsLeft + " seconds.");
+            // Check lockout cooldown — compare entirely inside MySQL to avoid timezone issues
+            if (lockoutUntil != null) {
+                try (PreparedStatement chk = connection.prepareStatement(
+                        "SELECT GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), lockout_until)) AS secs_left " +
+                        "FROM users WHERE id=?")) {
+                    chk.setInt(1, uid);
+                    ResultSet lr = chk.executeQuery();
+                    if (lr.next()) {
+                        long secsLeft = lr.getLong("secs_left");
+                        if (secsLeft > 0) {
+                            audit(uid, username, "LOGIN_DENIED", "Account locked, " + secsLeft + "s remaining");
+                            return LoginResult.locked("Too many attempts. Wait " + secsLeft + "s...");
+                        } else {
+                            // Expired — clear it in DB
+                            try (PreparedStatement clr = connection.prepareStatement(
+                                    "UPDATE users SET lockout_until=NULL, failed_attempts=0 WHERE id=?")) {
+                                clr.setInt(1, uid);
+                                clr.executeUpdate();
+                            }
+                            lockoutUntil = null;
+                        }
+                    }
+                }
             }
 
             // Check email verified
@@ -197,12 +215,12 @@ public class DataBaseManager {
             if (!attempt.equals(hash)) {
                 int newFails = failedAttempts + 1;
                 if (newFails >= MAX_FAILED_ATTEMPTS) {
-                    // Lock the account
+                    // Lock the account — reset counter to 0 so after cooldown expires
+                    // the user gets a fresh set of attempts
                     try (PreparedStatement upd = connection.prepareStatement(
-                            "UPDATE users SET failed_attempts=?, lockout_until=DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id=?")) {
-                        upd.setInt(1, newFails);
-                        upd.setInt(2, LOCKOUT_MINUTES);
-                        upd.setInt(3, uid);
+                            "UPDATE users SET failed_attempts=0, lockout_until=DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id=?")) {
+                        upd.setInt(1, LOCKOUT_MINUTES);
+                        upd.setInt(2, uid);
                         upd.executeUpdate();
                     }
                     audit(uid, username, "ACCOUNT_LOCKED",
