@@ -179,7 +179,8 @@ public class LoginScreen extends JPanel {
 
         p.add(Box.createVerticalStrut(6));
         loginFeedback = feedbackLabel();
-        loginFeedback.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginFeedback.setAlignmentX(Component.LEFT_ALIGNMENT);
+        loginFeedback.setHorizontalAlignment(SwingConstants.LEFT);
         p.add(loginFeedback);
 
         p.add(Box.createVerticalStrut(4));
@@ -274,7 +275,8 @@ public class LoginScreen extends JPanel {
 
         p.add(Box.createVerticalStrut(6));
         regFeedback = feedbackLabel();
-        regFeedback.setAlignmentX(Component.CENTER_ALIGNMENT);
+        regFeedback.setAlignmentX(Component.LEFT_ALIGNMENT);
+        regFeedback.setHorizontalAlignment(SwingConstants.LEFT);
         p.add(regFeedback);
 
         p.add(Box.createVerticalStrut(4));
@@ -442,6 +444,7 @@ public class LoginScreen extends JPanel {
         l.setFont(Theme.fontBody(11));
         l.setForeground(new Color(0x8AAA8A));
         l.setBorder(BorderFactory.createEmptyBorder(0, 2, 3, 0));
+        l.setAlignmentX(Component.LEFT_ALIGNMENT);
         return l;
     }
 
