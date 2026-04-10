@@ -80,7 +80,7 @@ public class EquationGameScreen extends JPanel {
         h.setOpaque(false);
         h.setBorder(Theme.emptyBorder(10, 20));
 
-        JLabel title = new JLabel("🧮  Apple Equation Challenge");
+        JLabel title = new JLabel("Apple Equation Challenge");
         title.setFont(Theme.fontTitle(20));
         title.setForeground(Theme.TEXT_PRIMARY);
 
@@ -482,7 +482,7 @@ public class EquationGameScreen extends JPanel {
     private void updateHUD() {
         timerLabel.setText("⏱  " + timeLeft + "s");
         timerLabel.setForeground(timeLeft <= 10 ? Theme.WRONG_GLOW : Theme.APPLE_GOLD);
-        scoreLabel.setText("⭐  " + score);
+        scoreLabel.setText("Score: " + score);
         streakLabel.setText("🔥  " + streak);
     }
 

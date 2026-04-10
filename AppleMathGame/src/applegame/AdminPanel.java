@@ -35,7 +35,7 @@ public class AdminPanel extends JPanel {
         header.setOpaque(false);
         header.setBorder(Theme.emptyBorder(12, 24));
 
-        JLabel title = new JLabel("🛡  Admin Panel");
+        JLabel title = new JLabel("Admin Panel");
         title.setFont(Theme.fontTitle(24));
         title.setForeground(Theme.APPLE_RED);
 
@@ -129,7 +129,7 @@ public class AdminPanel extends JPanel {
         nameLbl.setForeground(u.isAdmin() ? Theme.APPLE_GOLD : Theme.TEXT_PRIMARY);
 
         // Role badge
-        JLabel roleLbl = new JLabel(u.isAdmin() ? "👑 admin" : "🎮 player");
+        JLabel roleLbl = new JLabel(u.isAdmin() ? "Admin" : "Player");
         roleLbl.setFont(Theme.fontMono(12));
         roleLbl.setForeground(u.isAdmin() ? Theme.APPLE_GOLD : Theme.TEXT_MUTED);
 

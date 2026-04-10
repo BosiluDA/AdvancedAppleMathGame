@@ -38,7 +38,7 @@ public class LeaderboardScreen extends JPanel {
         header.setOpaque(false);
         header.setBorder(Theme.emptyBorder(12, 24));
 
-        JLabel title = new JLabel("🏆  Leaderboard");
+        JLabel title = new JLabel("Leaderboard");
         title.setFont(Theme.fontTitle(26));
         title.setForeground(Theme.TEXT_PRIMARY);
 
@@ -58,7 +58,7 @@ public class LeaderboardScreen extends JPanel {
         JPanel tabs = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 8));
         tabs.setOpaque(false);
 
-        JButton scoresTab = tabButton("⭐  Highest Scores", true);
+        JButton scoresTab = tabButton("Highest Scores", true);
         JButton timesTab  = tabButton("⏱  Fastest Times",  false);
 
         scoresTab.addActionListener(e -> { showingTimes = false; refreshTable(); });

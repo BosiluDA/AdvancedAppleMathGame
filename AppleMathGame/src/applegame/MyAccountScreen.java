@@ -35,7 +35,7 @@ public class MyAccountScreen extends JPanel {
         header.setOpaque(false);
         header.setBorder(Theme.emptyBorder(12, 24));
 
-        JLabel title = new JLabel("👤  My Account");
+        JLabel title = new JLabel("My Account");
         title.setFont(Theme.fontTitle(24));
         title.setForeground(Theme.TEXT_PRIMARY);
 
@@ -93,7 +93,7 @@ public class MyAccountScreen extends JPanel {
         }
 
         panel.add(Box.createVerticalStrut(24));
-        panel.add(sectionTitle("🎮 Recent Games"));
+        panel.add(sectionTitle("Recent Games"));
         panel.add(Box.createVerticalStrut(8));
 
         List<DataBaseManager.ScoreEntry> scores = db.getUserScores(Session.getUserId());
@@ -139,6 +139,8 @@ public class MyAccountScreen extends JPanel {
                     default               -> "•";
                 };
                 String detail = entry.detail != null ? entry.detail : "";
+                // Hide "role=player" from login entries — not useful to show the player
+                if (detail.startsWith("role=")) detail = "";
                 if (detail.length() > 30) detail = detail.substring(0, 28) + "…";
                 grid.add(levelStatRow(
                     icon + " " + entry.action.replace("_", " "),
@@ -157,7 +159,7 @@ public class MyAccountScreen extends JPanel {
         DataBaseManager.UserRecord u = Session.getUser();
         if (u != null) {
             panel.add(infoRow("Username", u.username));
-            panel.add(infoRow("Role", u.isAdmin() ? "👑 Admin" : "🎮 Player"));
+            panel.add(infoRow("Role", u.isAdmin() ? "Admin" : "Player"));
             if (u.lastLogin != null)
                 panel.add(infoRow("Last Login", u.lastLogin.format(FMT)));
             if (u.createdAt != null)

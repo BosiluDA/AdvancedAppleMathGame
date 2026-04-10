@@ -317,7 +317,7 @@ public class MemoryGameScreen extends JPanel {
     private void updateHUD() {
         timerLabel.setText("⏱  " + timeLeft + "s");
         timerLabel.setForeground(timeLeft <= 15 ? Theme.WRONG_GLOW : Theme.APPLE_GOLD);
-        scoreLabel.setText("⭐  " + score);
+        scoreLabel.setText("Score: " + score);
         pairsLabel.setText("🃏  " + matchedPairs + " / " + totalPairs);
         hintLabel.setText("💡  " + hintsLeft);
     }

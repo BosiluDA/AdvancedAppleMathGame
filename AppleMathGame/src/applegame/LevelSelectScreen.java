@@ -31,19 +31,19 @@ public class LevelSelectScreen extends JPanel {
         header.setOpaque(false);
         header.setBorder(Theme.emptyBorder(14, 24));
 
-        JLabel title = new JLabel("🍎  Select Level");
+        JLabel title = new JLabel("  Select Level");
         title.setFont(Theme.fontTitle(26));
         title.setForeground(Theme.TEXT_PRIMARY);
 
         JPanel headerRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         headerRight.setOpaque(false);
 
-        JButton eqBtn = Theme.successButton("🧮 Equation Mode");
+        JButton eqBtn = Theme.successButton("Equation Mode");
         if (Session.canPlayEquation()) {
             eqBtn.addActionListener(e -> window.startEquationGame());
         } else {
             // Guest — show lock and explain on click
-            eqBtn.setText("🔒 Equation Mode");
+            eqBtn.setText("Equation Mode (Members Only)");
             eqBtn.setForeground(Theme.TEXT_DIM);
             eqBtn.addActionListener(e -> {
                 JOptionPane pane = new JOptionPane(
@@ -53,15 +53,15 @@ public class LevelSelectScreen extends JPanel {
                     "Create a free account to unlock it!" +
                     "</div></html>",
                     JOptionPane.INFORMATION_MESSAGE);
-                JDialog dlg = pane.createDialog(window, "🔒 Members Only");
+                JDialog dlg = pane.createDialog(window, "Members Only");
                 dlg.setVisible(true);
             });
         }
 
-        JButton accountBtn = Theme.ghostButton("👤 My Account");
+        JButton accountBtn = Theme.ghostButton("My Account");
         accountBtn.addActionListener(e -> window.goToMyAccount());
 
-        JButton lbBtn = Theme.ghostButton("🏆 Leaderboard");
+        JButton lbBtn = Theme.ghostButton("Leaderboard");
         lbBtn.addActionListener(e -> window.goToLeaderboard());
 
         JButton homeBtn = Theme.ghostButton(Session.isGuest() ? "✕ Exit Guest" : "🔓 Logout");
@@ -94,7 +94,7 @@ public class LevelSelectScreen extends JPanel {
         infoStrip.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 24));
 
         JLabel playerLbl = new JLabel(
-            Session.isGuest() ? "👤 Guest  (scores not saved)" : "Player: " + state.getPlayerName());
+            Session.isGuest() ? "Guest  (scores not saved)" : "Player: " + state.getPlayerName());
         playerLbl.setFont(Theme.fontBodyBold(13));
         playerLbl.setForeground(Session.isGuest() ? Theme.TEXT_MUTED : Theme.APPLE_LIME);
 
@@ -209,7 +209,7 @@ public class LevelSelectScreen extends JPanel {
                     // Lock icon
                     g.setColor(Theme.TEXT_DIM);
                     g.setFont(Theme.fontMono(28));
-                    g.drawString("🔒", w/2 - 14, 58);
+                    // lock icon removed
                 }
                 g.dispose();
             }
